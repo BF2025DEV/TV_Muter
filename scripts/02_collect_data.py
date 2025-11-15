@@ -7,9 +7,9 @@ label when commercials start and end.
 
 INSTRUCTIONS:
 1. Start the script BEFORE the game starts
-2. Press SPACE whenever a commercial starts or ends
+2. Press ENTER whenever a commercial starts or ends
 3. The script will track everything automatically
-4. Press 'q' when done (end of game)
+4. Type 'q' and press ENTER when done (end of game)
 
 Your labels will be saved automatically!
 """
@@ -24,7 +24,6 @@ from lib.audio import AudioCapture, AudioRecorder
 from lib.utils import load_config, LabelManager, save_labels, get_timestamp_str, format_duration
 import time
 import threading
-import select
 
 
 class DataCollector:
@@ -69,8 +68,8 @@ class DataCollector:
         self.start_time = time.time()
 
         print("✅ Recording started!")
-        print("\n📝 Press SPACE when commercial starts/ends")
-        print("📝 Press 'q' to quit and save\n")
+        print("\n📝 Press ENTER when commercial starts/ends")
+        print("📝 Type 'q' and press ENTER to quit and save\n")
 
     def stop(self):
         """Stop recording"""
@@ -136,16 +135,16 @@ class DataCollector:
         save_labels(temp_labels, temp_filename)
         print("💾 Auto-saved")
 
-    def handle_space(self):
-        """Handle spacebar press (toggle commercial/program)"""
+    def handle_toggle(self):
+        """Handle ENTER press (toggle commercial/program)"""
         state = self.label_manager.toggle_state(self.elapsed_time)
 
-        # Print notification
+        # Print notification on new line (don't interfere with status bar)
         timestamp = format_duration(self.elapsed_time)
         if state == "COMMERCIAL":
-            print(f"[{timestamp}] 📺 → 🔇 Switched to COMMERCIAL")
+            print(f"\n[{timestamp}] 📺 → 🔇 Switched to COMMERCIAL")
         else:
-            print(f"[{timestamp}] 🔇 → 📺 Switched to PROGRAM")
+            print(f"\n[{timestamp}] 🔇 → 📺 Switched to PROGRAM")
 
     def update_display(self):
         """Update status display"""
@@ -205,37 +204,25 @@ class DataCollector:
 
 
 def input_listener(collector):
-    """Listen for keyboard input in separate thread"""
-    print("(Input listener started)")
+    """Listen for ENTER key presses in separate thread"""
+    print("(Press ENTER to toggle, or 'q' + ENTER to quit)")
 
     while collector.is_running:
-        # Check if input is available (works on Unix-like systems)
         try:
-            if sys.platform == 'darwin' or sys.platform.startswith('linux'):
-                import termios
-                import tty
+            # Wait for user input (blocking, but in separate thread so it's fine)
+            user_input = input().strip().lower()
 
-                # Save terminal settings
-                old_settings = termios.tcgetattr(sys.stdin)
-                try:
-                    tty.setcbreak(sys.stdin.fileno())
-                    # Check if there's input available (non-blocking)
-                    rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-                    if rlist:
-                        char = sys.stdin.read(1)
-                        if char == ' ':
-                            collector.handle_space()
-                        elif char.lower() == 'q':
-                            collector.is_running = False
-                finally:
-                    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+            if user_input == 'q' or user_input == 'quit':
+                collector.is_running = False
             else:
-                # Windows fallback - just use input with timeout
-                # This is less responsive but works
-                time.sleep(0.1)
+                # Any other input (including just pressing ENTER) toggles
+                collector.handle_toggle()
 
+        except EOFError:
+            # Handle Ctrl+D
+            break
         except Exception as e:
-            # If keyboard input fails, just continue
+            # If input fails, just continue
             time.sleep(0.1)
 
 
@@ -257,10 +244,10 @@ def main():
     print("   1. Make sure your TV audio is playing")
     print("   2. Start this script BEFORE the game begins")
     print("   3. The recording starts in PROGRAM mode (watching the game)")
-    print("   4. Press SPACE when a commercial break STARTS")
-    print("   5. Press SPACE again when the commercials END (game resumes)")
+    print("   4. Press ENTER when a commercial break STARTS")
+    print("   5. Press ENTER again when the commercials END (game resumes)")
     print("   6. Repeat step 4-5 throughout the game")
-    print("   7. Press 'q' when you're done\n")
+    print("   7. Type 'q' and press ENTER when you're done\n")
 
     input("\n👉 Press ENTER when ready to start recording...")
 
