@@ -1,0 +1,47 @@
+# Data files
+data/raw/*.wav
+data/labels/*.json
+data/processed/*.npy
+data/processed/*.npz
+
+# Model files
+models/*.keras
+models/*.h5
+models/*.tflite
+models/*.txt
+models/evaluation/*.png
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Keep directory structure but ignore contents
+!data/raw/.gitkeep
+!data/labels/.gitkeep
+!data/processed/.gitkeep
+!models/.gitkeep
+!music/.gitkeep

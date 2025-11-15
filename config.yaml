@@ -1,0 +1,55 @@
+# TV Muter Configuration File
+# Edit these settings as needed
+
+# Audio Recording Settings
+audio:
+  sample_rate: 16000  # Hz - lower rate saves space, sufficient for commercial detection
+  channels: 1  # Mono audio
+  chunk_size: 1024  # Samples per buffer
+  device_index: null  # null = use default, or specify device number (find with step 1 script)
+
+# Feature Extraction Settings
+features:
+  window_size: 1.0  # seconds - analyze audio in 1-second windows
+  hop_size: 0.5  # seconds - overlap between windows
+
+  # Which features to extract
+  extract_rms: true  # Root Mean Square (loudness)
+  extract_zcr: true  # Zero Crossing Rate (pitch)
+  extract_spectral_centroid: true  # Brightness of sound
+  extract_spectral_rolloff: true  # Shape of spectrum
+  extract_mfcc: true  # Mel-frequency cepstral coefficients (voice characteristics)
+  n_mfcc: 13  # Number of MFCC coefficients
+
+# Model Training Settings
+model:
+  sequence_length: 10  # seconds - how much history to consider
+  train_split: 0.8  # 80% training, 20% validation
+  epochs: 50  # Training iterations
+  batch_size: 32
+  learning_rate: 0.001
+
+# Commercial Detection Settings
+detection:
+  confidence_threshold: 0.7  # 0-1, higher = more conservative (fewer false positives)
+  min_commercial_duration: 15  # seconds - ignore detections shorter than this
+  min_program_duration: 30  # seconds - ignore program segments shorter than this
+  debounce_time: 2.0  # seconds - wait this long before changing state
+
+# TV Control Settings (for later - Pi deployment)
+tv_control:
+  method: "cec"  # Options: "cec", "ir", or "none"
+  test_mode: true  # If true, print actions instead of executing them
+
+# Data Collection Settings
+data_collection:
+  save_raw_audio: true  # Keep original audio files
+  auto_save_interval: 60  # seconds - auto-save labels this often
+
+# File Paths (relative to project root)
+paths:
+  raw_data: "data/raw"
+  labels: "data/labels"
+  processed_data: "data/processed"
+  models: "models"
+  music: "music"
