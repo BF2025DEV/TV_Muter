@@ -66,10 +66,7 @@ class DataCollector:
         self.recorder.start_recording()
         self.is_running = True
         self.start_time = time.time()
-
-        print("✅ Recording started!")
-        print("\n📝 Press ENTER when commercial starts/ends")
-        print("📝 Type 'q' and press ENTER to quit and save\n")
+        print("✅ Recording started in PROGRAM mode!")
 
     def stop(self):
         """Stop recording"""
@@ -146,8 +143,8 @@ class DataCollector:
         else:
             print(f"\n[{timestamp}] 🔇 → 📺 Switched to PROGRAM")
 
-    def update_display(self):
-        """Update status display"""
+    def print_status(self):
+        """Print status update on new line"""
         # Get current state
         state = "COMMERCIAL" if self.label_manager.current_state == 1 else "PROGRAM"
         state_icon = "🔇" if self.label_manager.current_state == 1 else "📺"
@@ -163,18 +160,20 @@ class DataCollector:
         # Format time
         time_str = format_duration(self.elapsed_time)
 
-        # Print status (overwrite same line)
-        status = (f"\r{state_icon} {state:<12} | "
-                  f"Time: {time_str:<10} | "
+        # Print status on NEW line to avoid conflicts with input
+        status = (f"[{time_str}] {state_icon} {state:<12} | "
                   f"Level: {bar:<30} | "
                   f"Segments: {stats['total_segments']}")
 
-        print(status, end='', flush=True)
+        print(f"\n{status}")
 
     def run(self):
         """Main collection loop"""
         self.setup_audio()
         self.start()
+
+        last_status_print = 0.0
+        status_interval = 5.0  # Print status every 5 seconds
 
         try:
             while self.is_running:
@@ -185,8 +184,10 @@ class DataCollector:
                 audio_chunk = self.capture.read_chunk()
                 self.recorder.add_chunk(audio_chunk)
 
-                # Update display
-                self.update_display()
+                # Print status periodically (every 5 seconds)
+                if self.elapsed_time - last_status_print >= status_interval:
+                    self.print_status()
+                    last_status_print = self.elapsed_time
 
                 # Check for auto-save
                 if self.elapsed_time - self.last_autosave > self.autosave_interval:
@@ -194,7 +195,7 @@ class DataCollector:
                     self.last_autosave = self.elapsed_time
 
                 # Small sleep to prevent crazy CPU usage
-                time.sleep(0.01)
+                time.sleep(0.05)
 
         except KeyboardInterrupt:
             print("\n\n⚠️  Interrupted by user")
@@ -205,12 +206,16 @@ class DataCollector:
 
 def input_listener(collector):
     """Listen for ENTER key presses in separate thread"""
-    print("(Press ENTER to toggle, or 'q' + ENTER to quit)")
+    print("\n" + "="*60)
+    print("Ready to collect data!")
+    print("Press ENTER to toggle PROGRAM ↔ COMMERCIAL")
+    print("Type 'q' and press ENTER to quit")
+    print("="*60 + "\n")
 
     while collector.is_running:
         try:
             # Wait for user input (blocking, but in separate thread so it's fine)
-            user_input = input().strip().lower()
+            user_input = input(">>> ").strip().lower()
 
             if user_input == 'q' or user_input == 'quit':
                 collector.is_running = False
